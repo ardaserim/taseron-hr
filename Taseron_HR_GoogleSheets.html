@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taşeron HR Yönetim Sistemi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f0f2f5;min-height:100vh;font-size:14px}
+:root{
+  --bg:#fff;--bg2:#f0f2f5;--bg3:#e8eaed;
+  --text:#1a1a1a;--text2:#555;--text3:#888;
+  --border:#dde1e7;--border2:#bcc0c8;
+  --blue:#1565c0;--blue-bg:#e3f2fd;--blue-light:#bbdefb;
+  --green:#2e7d32;--green-bg:#e8f5e9;
+  --red:#c62828;--red-bg:#ffebee;
+  --orange:#e65100;--orange-bg:#fff3e0;
+  --yellow-bg:#fffde7;--yellow:#f57f17;
+  --radius:8px;--shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;min-width:240px;background:var(--blue);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.15)}
+.sidebar-logo h1{font-size:15px;font-weight:700;color:#fff;line-height:1.3}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,0.6);margin-top:3px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px}
+.nav-group{margin-bottom:4px}
+.nav-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;padding:8px 10px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;color:rgba(255,255,255,0.75);font-size:13px;transition:all 0.15s;margin:1px 0}
+.nav-item:hover{background:rgba(255,255,255,0.12);color:#fff}
+.nav-item.active{background:rgba(255,255,255,0.2);color:#fff;font-weight:600}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.user-info{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.1);border-radius:8px;margin:8px 4px}
+.user-info .uname{font-size:12px;color:#fff;font-weight:600}
+.user-info .urole{font-size:10px;color:rgba(255,255,255,0.55);margin-top:1px}
+.logout-btn{width:100%;margin:4px 0 0;padding:7px;background:rgba(255,255,255,0.1);border:none;border-radius:6px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;text-align:left;padding-left:12px}
+.logout-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:16px;font-weight:600;color:var(--text)}
+.topbar-sub{font-size:12px;color:var(--text3)}
+.content{padding:20px;flex:1}
+.page{display:none}.page.active{display:block}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.metric-card{background:var(--bg);border-radius:var(--radius);padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.metric-card .label{font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+.metric-card .value{font-size:28px;font-weight:700;color:var(--text)}
+.metric-card .sub{font-size:11px;color:var(--text3);margin-top:4px}
+.metric-card.blue .value{color:var(--blue)}.metric-card.green .value{color:var(--green)}.metric-card.red .value{color:var(--red)}.metric-card.orange .value{color:var(--orange)}
+.card{background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600;color:var(--text)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--bg2);padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:0.4px}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafbfc}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.aktif{background:var(--green-bg);color:var(--green)}
+.badge.pasif{background:var(--red-bg);color:var(--red)}
+.badge.var{background:var(--green-bg);color:var(--green)}
+.badge.yok{background:var(--red-bg);color:var(--red)}
+.badge.zorunlu{background:var(--red-bg);color:var(--red)}
+.badge.normal{background:var(--blue-bg);color:var(--blue)}
+.badge.sureli{background:var(--yellow-bg);color:var(--yellow)}
+.badge.warning{background:var(--orange-bg);color:var(--orange)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;border:1px solid var(--border2);font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);color:var(--text);transition:all 0.15s}
+.btn:hover{background:var(--bg2)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{background:#1251a3}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn-group{display:flex;gap:6px;flex-wrap:wrap}
+.form-grid{display:grid;gap:12px}
+.form-grid.cols2{grid-template-columns:1fr 1fr}
+.form-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px}
+.form-field input,.form-field select,.form-field textarea{padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border-color 0.15s;width:100%;font-family:inherit}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,0.1)}
+.form-field textarea{resize:vertical;min-height:70px}
+.search-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg2);flex-wrap:wrap}
+.search-bar input{flex:1;min-width:180px;padding:7px 12px;border:1px solid var(--border2);border-radius:20px;font-size:13px;outline:none;background:var(--bg)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:12px;width:700px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal.sm{width:480px}.modal.lg{width:900px}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:1}
+.modal-title{font-size:15px;font-weight:600;color:var(--text)}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0 4px;line-height:1}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--bg)}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:500}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.alert{padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px}
+.alert.info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-light)}
+.alert.warning{background:var(--orange-bg);color:var(--orange);border:1px solid #ffcc80}
+.expiry-warning{color:var(--orange);font-weight:600}
+.expiry-danger{color:var(--red);font-weight:600}
+.expiry-ok{color:var(--green)}
+/* Loading */
+.loading-bar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--blue);z-index:9999;display:none;animation:loadpulse 1s ease infinite}
+.loading-bar.show{display:block}
+@keyframes loadpulse{0%{opacity:1}50%{opacity:0.4}100%{opacity:1}}
+.spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid var(--blue-light);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Login */
+#loginScreen{position:fixed;inset:0;background:linear-gradient(135deg,#1565c0 0%,#0d47a1 100%);display:flex;align-items:center;justify-content:center;z-index:9999}
+#loginScreen.hidden{display:none}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:420px;max-width:95vw;box-shadow:0 24px 60px rgba(0,0,0,0.3)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-size:22px;font-weight:700;color:#1565c0;margin-top:8px}
+.login-logo p{font-size:13px;color:#888;margin-top:4px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px}
+.login-field input{width:100%;padding:10px 14px;border:1px solid #dde1e7;border-radius:8px;font-size:14px;outline:none;transition:border-color 0.15s}
+.login-field input:focus{border-color:#1565c0;box-shadow:0 0 0 3px rgba(21,101,192,0.12)}
+.login-btn{width:100%;padding:11px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:background 0.15s}
+.login-btn:hover{background:#1251a3}
+.login-btn:disabled{background:#90a4ae;cursor:not-allowed}
+.login-error{background:#ffebee;color:#c62828;border:1px solid #ef9a9a;border-radius:6px;padding:8px 12px;font-size:13px;margin-top:10px;display:none}
+.login-error.show{display:block}
+.setup-box{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#2e7d32}
+/* Yetki */
+.admin-only{}
+.viewer .admin-only{display:none!important}
+.viewer #topbarActions{visibility:hidden}
+@media(max-width:768px){
+  .sidebar{width:190px;min-width:190px}
+  .form-grid.cols3{grid-template-columns:1fr 1fr}
+  .form-grid.cols2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-bar" id="loadingBar"></div>
+
+<!-- GİRİŞ EKRANI -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="position:relative;width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:16px">
+        <img src="https://drive.google.com/uc?export=view&id=1-aGF6lUgeMRxlA0orqqxyxc3ZPAIrlhB"
+             style="width:100%;height:100%;object-fit:cover;display:block"
+             onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex'">
+        <div id="logoFallback" style="display:none;position:absolute;inset:0;background:#1565c0;align-items:center;justify-content:center;font-size:48px">🏗️</div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(21,101,192,0.6));display:flex;align-items:flex-end;justify-content:center;padding-bottom:14px">
+          <h1 style="color:#fff;font-size:22px;font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,0.4)">Taşeron HR</h1>
+        </div>
+      </div>
+      <p>İnsan Kaynakları Yönetimi</p>
+    </div>
+
+    <div id="setupBox" class="setup-box" style="display:none">
+      ⚙️ İlk kullanım: Apps Script URL'si ayarlanmamış.
+      <br>Aşağıya Script URL'nizi girin:
+      <input type="text" id="setupUrl" placeholder="https://script.google.com/macros/s/..." style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #a5d6a7;border-radius:5px;font-size:12px">
+      <button onclick="saveScriptUrl()" style="margin-top:6px;padding:5px 12px;background:#2e7d32;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px">Kaydet</button>
+    </div>
+
+    <div class="login-field">
+      <label>Kullanıcı Adı</label>
+      <input type="text" id="loginUser" placeholder="kullanici_adi" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Şifre</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Giriş Yap →</button>
+    <div id="loginError" class="login-error">Kullanıcı adı veya şifre hatalı.</div>
+  </div>
+</div>
+
+<!-- ANA UYGULAMA -->
+<div class="app" id="mainApp">
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1>🏗️ Taşeron HR</h1>
+    <p>İnsan Kaynakları</p>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-label">Genel</div>
+      <div class="nav-item active" onclick="nav('dashboard')"><span class="icon">📊</span> Gösterge Paneli</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Firmalar</div>
+      <div class="nav-item" onclick="nav('taseronlar')"><span class="icon">🏢</span> Taşeron Firmalar</div>
+      <div class="nav-item" onclick="nav('yetkililer')"><span class="icon">👤</span> Firma Yetkilileri</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Personel</div>
+      <div class="nav-item" onclick="nav('personeller')"><span class="icon">👥</span> Personel Listesi</div>
+      <div class="nav-item" onclick="nav('belgeler')"><span class="icon">📋</span> Belge Takibi</div>
+      <div class="nav-item" onclick="nav('dekontlar')"><span class="icon">💰</span> Ödeme Dekontları</div>
+    </div>
+    <div class="nav-group admin-only">
+      <div class="nav-label">Tanımlar</div>
+      <div class="nav-item" onclick="nav('belge-turleri')"><span class="icon">📂</span> Belge Türleri</div>
+      <div class="nav-item" onclick="nav('kullanicilar')"><span class="icon">🔑</span> Kullanıcılar</div>
+    </div>
+  </div>
+  <div style="padding:8px 4px;border-top:1px solid rgba(255,255,255,0.15)">
+    <div class="user-info">
+      <div style="font-size:20px">👤</div>
+      <div>
+        <div class="uname" id="sidebarUserName">—</div>
+        <div class="urole" id="sidebarUserRole">—</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">🚪 Çıkış Yap</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="pageTitle">Gösterge Paneli</div>
+      <div class="topbar-sub" id="pageSubtitle">Genel bakış</div>
+    </div>
+    <div class="btn-group" id="topbarActions"></div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="metrics" id="dashMetrics"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚠️ Süresi Yaklaşan Belgeler (30 gün)</div></div>
+          <div class="table-wrap"><table><thead><tr><th>Personel</th><th>Belge</th><th>Son Geçerlilik</th><th>Kalan</th></tr></thead><tbody id="dashYaklasan"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🏢 Firma Durumu</div></div>
+          <div class="table-wrap"><table><thead><tr><th>Firma</th><th>Personel</th><th>Durum</th></tr></thead><tbody id="dashFirmalar"></tbody></table></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">❌ Eksik Zorunlu Belgeler</div></div>
+        <div class="table-wrap"><table><thead><tr><th>Personel</th><th>Firma</th><th>Eksik Belge</th></tr></thead><tbody id="dashEksik"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- TAŞERONLAR -->
+    <div id="page-taseronlar" class="page">
+      <div class="card">
+        <div class="search-bar">
+          <input type="text" id="srchTaseron" placeholder="🔍 Firma adı, vergi no..." oninput="renderTaseronlar()">
+          <select id="filtTaseronDurum" class="btn" style="border-radius:20px" onchange="renderTaseronlar()">
+            <option value="">Tüm Durumlar</option><option>Aktif</option><option>Pasif</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>#</th><th>Firma Ünvanı</th><th>Vergi No</th><th>SGK Sicil</th><th>Telefon</th><th>Sözleşme Bitiş</th><th>Durum</th><th>Personel</th><th class="admin-only">İşlem</th></tr></thead>
+          <tbody id="taseronTable"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- YETKİLİLER -->
+    <div id="page-yetkililer" class="page">
+      <div class="card">
+        <div class="search-bar">
+          <input type="text" id="srchYetkili" placeholder="🔍 Ad, firma..." oninput="renderYetkililer()">
+          <select id="filtYetkiliFirma" class="btn" style="border-radius:20px;min-width:170px" onchange="renderYetkililer()">
+            <option value="">Tüm Firmalar</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Ad Soyad</th><th>Firma</th><th>Ünvan</th><th>Yetki Türü</th><th>Telefon</th><th>Email</th><th>Durum</th><th class="admin-only">İşlem</th></tr></thead>
+          <tbody id="yetkiliTable"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- PERSONELLER -->
+    <div id="page-personeller" class="page">
+      <div class="card">
+        <div class="search-bar">
+          <input type="text" id="srchPersonel" placeholder="🔍 Ad, soyad, TC, görev..." oninput="renderPersoneller()">
+          <select id="filtPersonelFirma" class="btn" style="border-radius:20px;min-width:170px" onchange="renderPersoneller()">
+            <option value="">Tüm Firmalar</option>
+          </select>
+          <select id="filtPersonelDurum" class="btn" style="border-radius:20px" onchange="renderPersoneller()">
+            <option value="">Tüm Durumlar</option><option>Aktif</option><option>Pasif</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Ad Soyad</th><th>TC</th><th>Firma</th><th>Görev</th><th>Giriş Tarihi</th><th>Cinsiyet</th><th>Emekli</th><th>Durum</th><th>İşlem</th></tr></thead>
+          <tbody id="personelTable"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- BELGELER -->
+    <div id="page-belgeler" class="page">
+      <div class="card">
+        <div class="search-bar">
+          <input type="text" id="srchBelge" placeholder="🔍 Personel adı veya belge..." oninput="renderBelgeler()">
+          <select id="filtBelgeFirma" class="btn" style="border-radius:20px;min-width:170px" onchange="renderBelgeler()">
+            <option value="">Tüm Firmalar</option>
+          </select>
+          <select id="filtBelgeTuru" class="btn" style="border-radius:20px;min-width:160px" onchange="renderBelgeler()">
+            <option value="">Tüm Belge Türleri</option>
+          </select>
+          <select id="filtBelgeDurum" class="btn" style="border-radius:20px" onchange="renderBelgeler()">
+            <option value="">Tüm</option><option value="var">Var</option><option value="yok">Yok</option>
+            <option value="yaklasan">Süresi Yaklaşan</option><option value="gecmis">Süresi Geçmiş</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Personel</th><th>Firma</th><th>Belge Türü</th><th>Belge No</th><th>Veriliş</th><th>Geçerlilik</th><th>Veren Kurum</th><th>Durum</th><th class="admin-only">İşlem</th></tr></thead>
+          <tbody id="belgeTable"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- DEKONTLAR -->
+    <div id="page-dekontlar" class="page">
+      <div class="card">
+        <div class="search-bar">
+          <input type="text" id="srchDekont" placeholder="🔍 Personel veya dekont no..." oninput="renderDekontlar()">
+          <select id="filtDekontFirma" class="btn" style="border-radius:20px;min-width:170px" onchange="renderDekontlar()">
+            <option value="">Tüm Firmalar</option>
+          </select>
+          <select id="filtDekontYil" class="btn" style="border-radius:20px" onchange="renderDekontlar()">
+            <option value="">Tüm Yıllar</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Dekont No</th><th>Personel</th><th>Firma</th><th>Yıl/Ay</th><th>Ödeme Türü</th><th>Tutar</th><th>Tarih</th><th class="admin-only">İşlem</th></tr></thead>
+          <tbody id="dekontTable"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- BELGE TÜRLERİ -->
+    <div id="page-belge-turleri" class="page">
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Belge Adı</th><th>Açıklama</th><th>Zorunlu</th><th>Süreli</th><th>Durum</th><th class="admin-only">İşlem</th></tr></thead>
+          <tbody id="belgeTuruTable"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- KULLANICILAR -->
+    <div id="page-kullanicilar" class="page">
+      <div class="card">
+        <div style="padding:16px">
+          <div class="alert info" style="margin-bottom:16px">Kullanıcı bilgileri Google Sheets'teki <strong>Kullanicilar</strong> sayfasında saklanır.</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Kullanıcı Adı</th><th>Ad Soyad</th><th>Rol</th><th class="admin-only">İşlem</th></tr></thead>
+            <tbody id="kullaniciTable"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div><!-- app -->
+
+<!-- MODALS -->
+
+<!-- Taşeron -->
+<div id="modalTaseron" class="modal-overlay" onclick="overlayClose(event,'modalTaseron')">
+<div class="modal">
+  <div class="modal-header"><div class="modal-title" id="mTaseronTitle">Taşeron Firma</div><button class="modal-close" onclick="closeModal('modalTaseron')">×</button></div>
+  <div class="modal-body">
+    <div class="tabs"><div class="tab active" onclick="switchTab(this,'tabTB')">Bilgiler</div><div class="tab" onclick="switchTab(this,'tabTS')">Sözleşme</div><div class="tab" onclick="switchTab(this,'tabTN')">Not & Adres</div></div>
+    <div id="tabTB">
+      <div class="form-grid cols2">
+        <div class="form-field" style="grid-column:1/-1"><label>Firma Ünvanı *</label><input id="fTUnvan" type="text"></div>
+        <div class="form-field"><label>Vergi No</label><input id="fTVergiNo" type="text"></div>
+        <div class="form-field"><label>Vergi Dairesi</label><input id="fTVergiDairesi" type="text"></div>
+        <div class="form-field"><label>SGK Sicil No</label><input id="fTSgk" type="text"></div>
+        <div class="form-field"><label>Durum</label><select id="fTDurum"><option>Aktif</option><option>Pasif</option></select></div>
+        <div class="form-field"><label>Telefon</label><input id="fTTelefon" type="text"></div>
+        <div class="form-field"><label>Fax</label><input id="fTFax" type="text"></div>
+        <div class="form-field"><label>Email</label><input id="fTEmail" type="email"></div>
+        <div class="form-field"><label>Website</label><input id="fTWebsite" type="text"></div>
+      </div>
+    </div>
+    <div id="tabTS" style="display:none">
+      <div class="form-grid cols2">
+        <div class="form-field"><label>İş Konusu</label><input id="fTIsKonusu" type="text"></div>
+        <div class="form-field"><label>Şantiye</label><input id="fTSantiye" type="text"></div>
+        <div class="form-field"><label>Sözleşme Başlangıcı</label><input id="fTSozBas" type="date"></div>
+        <div class="form-field"><label>Sözleşme Bitişi</label><input id="fTSozBit" type="date"></div>
+        <div class="form-field" style="grid-column:1/-1"><label>Sözleşme Tutarı (₺)</label><input id="fTSozTutar" type="number"></div>
+      </div>
+    </div>
+    <div id="tabTN" style="display:none">
+      <div class="form-grid">
+        <div class="form-field"><label>Adres</label><textarea id="fTAdres"></textarea></div>
+        <div class="form-field"><label>Not</label><textarea id="fTNotlar"></textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal('modalTaseron')">İptal</button><button class="btn primary" onclick="saveTaseron()">💾 Kaydet</button></div>
+</div></div>
+
+<!-- Yetkili -->
+<div id="modalYetkili" class="modal-overlay" onclick="overlayClose(event,'modalYetkili')">
+<div class="modal sm">
+  <div class="modal-header"><div class="modal-title" id="mYetkiliTitle">Firma Yetkilisi</div><button class="modal-close" onclick="closeModal('modalYetkili')">×</button></div>
+  <div class="modal-body">
+    <div class="form-grid cols2">
+      <div class="form-field"><label>Firma *</label><select id="fYFirma"></select></div>
+      <div class="form-field"><label>Yetki Türü</label><select id="fYYetkiTuru"><option>İmza Yetkilisi</option><option>Teknik Sorumlu</option><option>İdari Sorumlu</option><option>Saha Sorumlusu</option><option>Muhasebe</option></select></div>
+      <div class="form-field"><label>Ad Soyad *</label><input id="fYAdSoyad" type="text"></div>
+      <div class="form-field"><label>Ünvan</label><input id="fYUnvan" type="text"></div>
+      <div class="form-field"><label>Telefon</label><input id="fYTelefon" type="text"></div>
+      <div class="form-field"><label>Telefon 2</label><input id="fYTelefon2" type="text"></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Email</label><input id="fYEmail" type="email"></div>
+      <div class="form-field"><label>Durum</label><select id="fYDurum"><option>Aktif</option><option>Pasif</option></select></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Not</label><textarea id="fYNotlar" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal('modalYetkili')">İptal</button><button class="btn primary" onclick="saveYetkili()">💾 Kaydet</button></div>
+</div></div>
+
+<!-- Personel -->
+<div id="modalPersonel" class="modal-overlay" onclick="overlayClose(event,'modalPersonel')">
+<div class="modal lg">
+  <div class="modal-header"><div class="modal-title" id="mPersonelTitle">Personel Kartı</div><button class="modal-close" onclick="closeModal('modalPersonel')">×</button></div>
+  <div class="modal-body">
+    <div class="tabs"><div class="tab active" onclick="switchTab(this,'tabPK')">Kişisel</div><div class="tab" onclick="switchTab(this,'tabPI')">İş Bilgileri</div><div class="tab" onclick="switchTab(this,'tabPD')">Diğer</div></div>
+    <div id="tabPK">
+      <div class="form-grid cols3">
+        <div class="form-field"><label>TC Kimlik No</label><input id="fPTC" type="text" maxlength="11"></div>
+        <div class="form-field"><label>Ad *</label><input id="fPAdi" type="text"></div>
+        <div class="form-field"><label>Soyad *</label><input id="fPSoyadi" type="text"></div>
+        <div class="form-field"><label>Cinsiyet</label><select id="fPCinsiyet"><option>Erkek</option><option>Kadın</option></select></div>
+        <div class="form-field"><label>Doğum Tarihi</label><input id="fPDogum" type="date"></div>
+        <div class="form-field"><label>Telefon</label><input id="fPTelefon" type="text"></div>
+        <div class="form-field" style="grid-column:1/-1"><label>Adres</label><textarea id="fPAdres" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div id="tabPI" style="display:none">
+      <div class="form-grid cols2">
+        <div class="form-field"><label>Firma *</label><select id="fPFirma"></select></div>
+        <div class="form-field"><label>Görev</label><input id="fPGorev" type="text"></div>
+        <div class="form-field"><label>Öğrenim Durumu</label><select id="fPOgrenim"><option>İlköğretim</option><option>Ortaöğretim</option><option>Ön Lisans</option><option>Lisans</option><option>Yüksek Lisans</option></select></div>
+        <div class="form-field"><label>Maaş (₺)</label><input id="fPMaas" type="number"></div>
+        <div class="form-field"><label>Firmaya Giriş</label><input id="fPGiris" type="date"></div>
+        <div class="form-field"><label>Firmadan Çıkış</label><input id="fPCikis" type="date"></div>
+        <div class="form-field"><label>Durum</label><select id="fPDurum"><option>Aktif</option><option>Pasif</option></select></div>
+        <div class="form-field"><label>Emekli</label><select id="fPEmekli"><option value="FALSE">Hayır</option><option value="TRUE">Evet</option></select></div>
+      </div>
+    </div>
+    <div id="tabPD" style="display:none">
+      <div class="form-field"><label>Not</label><textarea id="fPNotlar" rows="4"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal('modalPersonel')">İptal</button><button class="btn primary" onclick="savePersonel()">💾 Kaydet</button></div>
+</div></div>
+
+<!-- Belge -->
+<div id="modalBelge" class="modal-overlay" onclick="overlayClose(event,'modalBelge')">
+<div class="modal sm">
+  <div class="modal-header"><div class="modal-title" id="mBelgeTitle">Belge Kaydı</div><button class="modal-close" onclick="closeModal('modalBelge')">×</button></div>
+  <div class="modal-body">
+    <div class="form-grid cols2">
+      <div class="form-field"><label>Personel *</label><select id="fBPersonel"></select></div>
+      <div class="form-field"><label>Belge Türü *</label><select id="fBTuru"></select></div>
+      <div class="form-field"><label>Belge No</label><input id="fBNo" type="text"></div>
+      <div class="form-field"><label>Veren Kurum</label><input id="fBVerenKurum" type="text"></div>
+      <div class="form-field"><label>Veriliş Tarihi</label><input id="fBVerisTarihi" type="date"></div>
+      <div class="form-field"><label>Geçerlilik Tarihi</label><input id="fBGecerlilik" type="date"></div>
+      <div class="form-field"><label>Belge Durumu</label><select id="fBVarMi"><option value="TRUE">Var</option><option value="FALSE">Yok</option></select></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Not</label><textarea id="fBNotlar" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal('modalBelge')">İptal</button><button class="btn primary" onclick="saveBelge()">💾 Kaydet</button></div>
+</div></div>
+
+<!-- Dekont -->
+<div id="modalDekont" class="modal-overlay" onclick="overlayClose(event,'modalDekont')">
+<div class="modal sm">
+  <div class="modal-header"><div class="modal-title" id="mDekontTitle">Ödeme Dekontu</div><button class="modal-close" onclick="closeModal('modalDekont')">×</button></div>
+  <div class="modal-body">
+    <div class="form-grid cols2">
+      <div class="form-field"><label>Firma *</label><select id="fDFirma" onchange="onDFirmaChange()"></select></div>
+      <div class="form-field"><label>Personel *</label><select id="fDPersonel"></select></div>
+      <div class="form-field"><label>Yıl</label><input id="fDYil" type="number" value="2025"></div>
+      <div class="form-field"><label>Ay</label><select id="fDAy"><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
+      <div class="form-field"><label>Ödeme Türü</label><select id="fDOdemeTuru"><option>Maaş</option><option>Prim</option><option>Avans</option><option>SGK Primi</option><option>Diğer</option></select></div>
+      <div class="form-field"><label>Ödeme Tarihi</label><input id="fDOdemeTarihi" type="date"></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Tutar (₺) *</label><input id="fDTutar" type="number" step="0.01"></div>
+      <div class="form-field"><label>Dekont No</label><input id="fDNo" type="text"></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Açıklama</label><textarea id="fDAciklama" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal('modalDekont')">İptal</button><button class="btn primary" onclick="saveDekont()">💾 Kaydet</button></div>
+</div></div>
+
+<!-- Belge Türü -->
+<div id="modalBelgeTuru" class="modal-overlay" onclick="overlayClose(event,'modalBelgeTuru')">
+<div class="modal sm">
+  <div class="modal-header"><div class="modal-title" id="mBTTitle">Belge Türü</div><button class="modal-close" onclick="closeModal('modalBelgeTuru')">×</button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-field"><label>Belge Adı *</label><input id="fBTAdi" type="text"></div>
+      <div class="form-field"><label>Açıklama</label><input id="fBTAciklama" type="text"></div>
+      <div class="form-grid cols3">
+        <div class="form-field"><label>Zorunlu</label><select id="fBTZorunlu"><option value="TRUE">Evet</option><option value="FALSE">Hayır</option></select></div>
+        <div class="form-field"><label>Süreli</label><select id="fBTSureli"><option value="TRUE">Evet</option><option value="FALSE">Hayır</option></select></div>
+        <div class="form-field"><label>Aktif</label><select id="fBTAktif"><option value="TRUE">Evet</option><option value="FALSE">Hayır</option></select></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal('modalBelgeTuru')">İptal</button><button class="btn primary" onclick="saveBelgeTuru()">💾 Kaydet</button></div>
+</div></div>
+
+<!-- Kullanıcı -->
+<div id="modalKullanici" class="modal-overlay" onclick="overlayClose(event,'modalKullanici')">
+<div class="modal sm">
+  <div class="modal-header"><div class="modal-title">Yeni Kullanıcı Ekle</div><button class="modal-close" onclick="closeModal('modalKullanici')">×</button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-field"><label>Kullanıcı Adı *</label><input id="fKAdi" type="text" placeholder="kucuk_harf_kullan"></div>
+      <div class="form-field"><label>Ad Soyad *</label><input id="fKAdSoyad" type="text"></div>
+      <div class="form-field"><label>Şifre *</label><input id="fKSifre" type="password" placeholder="Min. 6 karakter"></div>
+      <div class="form-field"><label>Yetki Rolü</label>
+        <select id="fKRol">
+          <option value="admin">Admin — Tüm yetkiler</option>
+          <option value="viewer">Görüntüleyici — Sadece okuma</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal('modalKullanici')">İptal</button><button class="btn primary" onclick="saveKullanici()">💾 Kaydet</button></div>
+</div></div>
+
+<script>
+// ============================================================
+// AYARLAR — Script URL'nizi buraya yazın (kurulumdan sonra)
+// ============================================================
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoNjicJOEM4q0ze1uKQnS4AS6SW6hFYQQR0Ym4tzOmy1OWacxejZ7fDx7kiHboCoTfvg/exec';
+
+function saveScriptUrl() {
+  const url = document.getElementById('setupUrl').value.trim();
+  if (!url.startsWith('https://script.google.com')) { alert('Geçerli bir Apps Script URL girin.'); return; }
+  SCRIPT_URL = url;
+  localStorage.setItem('hr_script_url', url);
+  document.getElementById('setupBox').style.display = 'none';
+  alert('Kaydedildi! Şimdi giriş yapabilirsiniz.');
+}
+
+// ============================================================
+// VERİ CACHE — Google Sheets'ten yüklenen veriler
+// ============================================================
+let cache = {
+  taseronlar: [], yetkililer: [], personeller: [],
+  belgeTurleri: [], belgeler: [], dekontlar: [], kullanicilar: []
+};
+let currentUser = null;
+let editingId = null;
+
+// ============================================================
+// API — Google Sheets ile konuşma
+// ============================================================
+function apiCall(params) {
+  return new Promise((resolve, reject) => {
+    if (!SCRIPT_URL) { reject(new Error('Script URL ayarlanmamış')); return; }
+    const cbName = 'cb_' + Date.now();
+    const url = SCRIPT_URL + '?' + Object.entries({...params, callback: cbName})
+      .map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    const script = document.createElement('script');
+    window[cbName] = (data) => {
+      delete window[cbName];
+      document.body.removeChild(script);
+      if (data.error) reject(new Error(data.error));
+      else resolve(data);
+    };
+    script.onerror = () => reject(new Error('Bağlantı hatası'));
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+
+async function readSheet(sheet) {
+  const r = await apiCall({action:'read', sheet});
+  return r.rows || [];
+}
+
+async function writeRow(sheet, data) {
+  return apiCall({action:'write', sheet, data: JSON.stringify(data)});
+}
+
+async function updateRow(sheet, id, data) {
+  return apiCall({action:'update', sheet, id, data: JSON.stringify(data)});
+}
+
+async function deleteRow(sheet, id) {
+  return apiCall({action:'delete', sheet, id});
+}
+
+function loading(show, text) {
+  const bar = document.getElementById('loadingBar');
+  bar.className = show ? 'loading-bar show' : 'loading-bar';
+}
+
+// ============================================================
+// GİRİŞ
+// ============================================================
+function doLogin() {
+  if (!SCRIPT_URL) { document.getElementById('setupBox').style.display='block'; return; }
+  const uname = document.getElementById('loginUser').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const btn   = document.getElementById('loginBtn');
+  const err   = document.getElementById('loginError');
+  if (!uname || !pass) { err.textContent='Kullanıcı adı ve şifre giriniz.'; err.classList.add('show'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Giriş yapılıyor...';
+  loading(true);
+  readSheet('Kullanicilar').then(rows => {
+    const user = rows.find(r => String(r.KullaniciAdi).trim() === uname && String(r.Sifre).trim() === pass);
+    if (!user) {
+      err.textContent = 'Kullanıcı adı veya şifre hatalı.';
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Giriş Yap →';
+      loading(false);
+      return;
+    }
+    err.classList.remove('show');
+    currentUser = {username: user.KullaniciAdi, displayName: user.AdSoyad, role: user.Rol, roleLabel: user.Rol === 'admin' ? 'Admin' : 'Görüntüleyici'};
+    applyRole(user.Rol);
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('sidebarUserName').textContent = user.AdSoyad;
+    document.getElementById('sidebarUserRole').textContent = user.Rol === 'admin' ? 'Admin' : 'Görüntüleyici';
+    loading(false);
+    loadAllData();
+  }).catch(e => {
+    err.textContent = 'Sunucuya bağlanılamadı: ' + e.message;
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Giriş Yap →';
+    loading(false);
+  });
+}
+
+function doLogout() {
+  currentUser = null;
+  cache = {taseronlar:[],yetkililer:[],personeller:[],belgeTurleri:[],belgeler:[],dekontlar:[],kullanicilar:[]};
+  document.getElementById('mainApp').classList.remove('viewer');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtn').textContent = 'Giriş Yap →';
+}
+
+function applyRole(role) {
+  const app = document.getElementById('mainApp');
+  role === 'viewer' ? app.classList.add('viewer') : app.classList.remove('viewer');
+}
+
+function isAdmin() { return currentUser && currentUser.role === 'admin'; }
+
+// ============================================================
+// VERİ YÜKLEME
+// ============================================================
+async function loadAllData() {
+  loading(true, 'Veriler yükleniyor...');
+  try {
+    const [t,y,p,bt,b,d,k] = await Promise.all([
+      readSheet('Taseronlar'), readSheet('Yetkililer'), readSheet('Personeller'),
+      readSheet('BelgeTurleri'), readSheet('Belgeler'), readSheet('Dekontlar'), readSheet('Kullanicilar')
+    ]);
+    cache.taseronlar   = t;
+    cache.yetkililer   = y;
+    cache.personeller  = p;
+    cache.belgeTurleri = bt;
+    cache.belgeler     = b;
+    cache.dekontlar    = d;
+    cache.kullanicilar = k;
+    populateFilters();
+    nav('dashboard');
+  } catch(e) {
+    alert('Veri yüklenirken hata: ' + e.message);
+  }
+  loading(false);
+}
+
+// ============================================================
+// NAVİGASYON
+// ============================================================
+const pageTitles = {
+  dashboard:      ['Gösterge Paneli','Genel bakış'],
+  taseronlar:     ['Taşeron Firmalar','Firma listesi'],
+  yetkililer:     ['Firma Yetkilileri','Yetkili kişi bilgileri'],
+  personeller:    ['Personel Listesi','Tüm personel kayıtları'],
+  belgeler:       ['Belge Takibi','Personel belge durumları'],
+  dekontlar:      ['Ödeme Dekontları','Ödeme kayıtları'],
+  'belge-turleri':['Belge Türleri','Belge tanımları'],
+  kullanicilar:   ['Kullanıcılar','Kullanıcı yönetimi'],
+};
+const pageActions = {
+  taseronlar:      '<button class="btn primary admin-only" onclick="openTaseron()">+ Yeni Firma</button>',
+  yetkililer:      '<button class="btn primary admin-only" onclick="openYetkili()">+ Yeni Yetkili</button>',
+  personeller:     '<button class="btn primary admin-only" onclick="openPersonel()">+ Yeni Personel</button>',
+  belgeler:        '<button class="btn primary admin-only" onclick="openBelge()">+ Belge Ekle</button>',
+  dekontlar:       '<button class="btn primary admin-only" onclick="openDekont()">+ Dekont Ekle</button>',
+  'belge-turleri': '<button class="btn primary admin-only" onclick="openBelgeTuru()">+ Belge Türü Ekle</button>',
+  kullanicilar:    '<button class="btn primary admin-only" onclick="openKullanici()">+ Kullanıcı Ekle</button>',
+};
+
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg = document.getElementById('page-'+page);
+  if (pg) pg.classList.add('active');
+  const ni = document.querySelector(`.nav-item[onclick*="${page}"]`);
+  if (ni) ni.classList.add('active');
+  const t = pageTitles[page]||[page,''];
+  document.getElementById('pageTitle').textContent = t[0];
+  document.getElementById('pageSubtitle').textContent = t[1];
+  document.getElementById('topbarActions').innerHTML = pageActions[page]||'';
+  if (page==='dashboard')      renderDashboard();
+  else if (page==='taseronlar')    renderTaseronlar();
+  else if (page==='yetkililer')    renderYetkililer();
+  else if (page==='personeller')   renderPersoneller();
+  else if (page==='belgeler')      renderBelgeler();
+  else if (page==='dekontlar')     renderDekontlar();
+  else if (page==='belge-turleri') renderBelgeTurleri();
+  else if (page==='kullanicilar')  renderKullanicilar();
+}
+
+// ============================================================
+// YARDIMCI FONKSİYONLAR
+// ============================================================
+function fmtDate(d) { if (!d) return '—'; try { const dt=new Date(d); return isNaN(dt)?d:dt.toLocaleDateString('tr-TR'); } catch(e){return d;} }
+function fmtMoney(n) { if (!n&&n!==0) return '—'; return Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ₺'; }
+function v(id) { const el=document.getElementById(id); return el?el.value:''; }
+function daysLeft(ds) { if(!ds) return null; const d=new Date(ds)-new Date(); return Math.ceil(d/86400000); }
+function expiryClass(days) { if(days===null)return''; if(days<0)return'expiry-danger'; if(days<=30)return'expiry-warning'; return'expiry-ok'; }
+function expiryText(days) { if(days===null)return'—'; if(days<0)return`${Math.abs(days)} gün önce doldu`; if(days===0)return'Bugün bitiyor!'; return`${days} gün`; }
+function getTaseron(id) { return cache.taseronlar.find(t=>String(t.ID)===String(id))||{Unvan:'Bilinmiyor'}; }
+function getPersonelAdi(id) { const p=cache.personeller.find(p=>String(p.ID)===String(id)); return p?p.Adi+' '+p.Soyadi:'—'; }
+function getBelgeTuruAdi(id) { const b=cache.belgeTurleri.find(b=>String(b.ID)===String(id)); return b?b.Adi:'Bilinmiyor'; }
+function isTruthy(v) { return v===true||String(v).toUpperCase()==='TRUE'; }
+
+function populateFilters() {
+  // Firma filtreleri
+  ['filtTaseronDurum','filtYetkiliFirma','filtPersonelFirma','filtBelgeFirma','filtDekontFirma'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id === 'filtTaseronDurum') return;
+    const cur = el.value;
+    el.innerHTML = '<option value="">Tüm Firmalar</option>' + cache.taseronlar.map(t=>`<option value="${t.ID}">${t.Unvan}</option>`).join('');
+    el.value = cur;
+  });
+  // Firma select in modals
+  ['fYFirma','fPFirma','fDFirma'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = cache.taseronlar.map(t=>`<option value="${t.ID}">${t.Unvan}</option>`).join('');
+  });
+  // Belge türü filter
+  const btf = document.getElementById('filtBelgeTuru');
+  if (btf) btf.innerHTML = '<option value="">Tüm Belge Türleri</option>' + cache.belgeTurleri.map(b=>`<option value="${b.ID}">${b.Adi}</option>`).join('');
+  const fbt = document.getElementById('fBTuru');
+  if (fbt) fbt.innerHTML = cache.belgeTurleri.filter(b=>isTruthy(b.Aktif)).map(b=>`<option value="${b.ID}">${b.Adi}</option>`).join('');
+  // Personel select
+  const fp = document.getElementById('fBPersonel');
+  if (fp) fp.innerHTML = cache.personeller.map(p=>`<option value="${p.ID}">${p.Adi} ${p.Soyadi} — ${getTaseron(p.TaseronId).Unvan}</option>`).join('');
+  // Yıl filtresi
+  const yilF = document.getElementById('filtDekontYil');
+  if (yilF) {
+    const yillar = [...new Set(cache.dekontlar.map(d=>d.Yil))].filter(Boolean).sort().reverse();
+    yilF.innerHTML = '<option value="">Tüm Yıllar</option>' + yillar.map(y=>`<option value="${y}">${y}</option>`).join('');
+  }
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const aktifFirma = cache.taseronlar.filter(t=>t.Durum==='Aktif').length;
+  const aktifPersonel = cache.personeller.filter(p=>p.Durum==='Aktif').length;
+  const today = new Date();
+  const soon = new Date(today.getTime()+30*86400000);
+  const yaklasan = cache.belgeler.filter(b=>isTruthy(b.VarMi)&&b.GecerlilikTarihi&&new Date(b.GecerlilikTarihi)<=soon&&new Date(b.GecerlilikTarihi)>=today);
+  const gecmis = cache.belgeler.filter(b=>isTruthy(b.VarMi)&&b.GecerlilikTarihi&&new Date(b.GecerlilikTarihi)<today);
+
+  document.getElementById('dashMetrics').innerHTML = `
+    <div class="metric-card blue"><div class="label">Aktif Firma</div><div class="value">${aktifFirma}</div><div class="sub">Toplam: ${cache.taseronlar.length}</div></div>
+    <div class="metric-card green"><div class="label">Aktif Personel</div><div class="value">${aktifPersonel}</div><div class="sub">Toplam: ${cache.personeller.length}</div></div>
+    <div class="metric-card orange"><div class="label">Süresi Yaklaşan</div><div class="value">${yaklasan.length}</div><div class="sub">30 gün içinde</div></div>
+    <div class="metric-card red"><div class="label">Süresi Geçmiş</div><div class="value">${gecmis.length}</div><div class="sub">Yenilenmeli</div></div>
+    <div class="metric-card"><div class="label">Toplam Belge</div><div class="value">${cache.belgeler.length}</div></div>
+    <div class="metric-card"><div class="label">Toplam Dekont</div><div class="value">${cache.dekontlar.length}</div><div class="sub">${fmtMoney(cache.dekontlar.reduce((a,d)=>a+Number(d.Tutar||0),0))}</div></div>
+  `;
+
+  const yb = [...yaklasan,...gecmis].slice(0,10);
+  document.getElementById('dashYaklasan').innerHTML = yb.length ? yb.map(b=>{
+    const days=daysLeft(b.GecerlilikTarihi);
+    return `<tr><td><strong>${b.PersonelAdi||'—'}</strong></td><td>${b.BelgeTuruAdi||'—'}</td><td>${fmtDate(b.GecerlilikTarihi)}</td><td class="${expiryClass(days)}">${expiryText(days)}</td></tr>`;
+  }).join('') : '<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">✅ Yaklaşan belge yok</td></tr>';
+
+  document.getElementById('dashFirmalar').innerHTML = cache.taseronlar.map(t=>{
+    const cnt=cache.personeller.filter(p=>String(p.TaseronId)===String(t.ID)&&p.Durum==='Aktif').length;
+    return `<tr><td><strong>${t.Unvan}</strong></td><td>${cnt} kişi</td><td><span class="badge ${t.Durum?.toLowerCase()}">${t.Durum||'—'}</span></td></tr>`;
+  }).join('');
+
+  const zorunluBT = cache.belgeTurleri.filter(b=>isTruthy(b.Zorunlu)&&isTruthy(b.Aktif));
+  const eksikler = [];
+  cache.personeller.filter(p=>p.Durum==='Aktif').forEach(p=>{
+    zorunluBT.forEach(bt=>{
+      const var_=cache.belgeler.find(b=>String(b.PersonelId)===String(p.ID)&&String(b.BelgeTuruId)===String(bt.ID)&&isTruthy(b.VarMi));
+      if(!var_) eksikler.push({personel:p.Adi+' '+p.Soyadi,firma:getTaseron(p.TaseronId).Unvan,belge:bt.Adi});
+    });
+  });
+  document.getElementById('dashEksik').innerHTML = eksikler.length
+    ? eksikler.slice(0,15).map(e=>`<tr><td><strong>${e.personel}</strong></td><td>${e.firma}</td><td><span class="badge yok">${e.belge}</span></td></tr>`).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:#888;padding:20px">✅ Eksik belge yok</td></tr>';
+}
+
+// ============================================================
+// TAŞERONLAR
+// ============================================================
+function renderTaseronlar() {
+  const q=(v('srchTaseron')||'').toLowerCase();
+  const d=v('filtTaseronDurum');
+  const list=cache.taseronlar.filter(t=>(!q||(t.Unvan||'').toLowerCase().includes(q)||(t.VergiNo||'').includes(q))&&(!d||t.Durum===d));
+  document.getElementById('taseronTable').innerHTML = list.length ? list.map((t,i)=>{
+    const cnt=cache.personeller.filter(p=>String(p.TaseronId)===String(t.ID)).length;
+    return `<tr><td>${i+1}</td><td><strong>${t.Unvan}</strong></td><td>${t.VergiNo||'—'}</td><td>${t.SgkSicil||'—'}</td><td>${t.Telefon||'—'}</td><td>${fmtDate(t.SozBit)}</td><td><span class="badge ${t.Durum?.toLowerCase()}">${t.Durum||'—'}</span></td><td>${cnt} kişi</td>
+    <td class="admin-only"><div class="btn-group"><button class="btn sm" onclick="openTaseron('${t.ID}')">✏️</button><button class="btn sm" onclick="delTaseron('${t.ID}')">🗑️</button></div></td></tr>`;
+  }).join('') : '<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">Kayıt bulunamadı</td></tr>';
+}
+
+function openTaseron(id) {
+  editingId=id||null;
+  const t=id?cache.taseronlar.find(x=>String(x.ID)===String(id)):{};
+  document.getElementById('mTaseronTitle').textContent=id?'Firma Düzenle':'Yeni Firma';
+  const map={fTUnvan:'Unvan',fTVergiNo:'VergiNo',fTVergiDairesi:'VergiDairesi',fTSgk:'SgkSicil',fTDurum:'Durum',fTTelefon:'Telefon',fTFax:'Fax',fTEmail:'Email',fTWebsite:'Website',fTIsKonusu:'IsKonusu',fTSantiye:'Santiye',fTSozBas:'SozBas',fTSozBit:'SozBit',fTSozTutar:'SozTutar',fTAdres:'Adres',fTNotlar:'Notlar'};
+  Object.entries(map).forEach(([fid,key])=>{const el=document.getElementById(fid);if(el)el.value=t[key]||'';});
+  resetTabs('tabTB',['tabTB','tabTS','tabTN']);
+  document.getElementById('modalTaseron').classList.add('open');
+}
+
+async function saveTaseron() {
+  const unvan=v('fTUnvan').trim();if(!unvan){alert('Firma ünvanı zorunludur.');return;}
+  const data={Unvan:unvan,VergiNo:v('fTVergiNo'),VergiDairesi:v('fTVergiDairesi'),SgkSicil:v('fTSgk'),Durum:v('fTDurum'),Telefon:v('fTTelefon'),Fax:v('fTFax'),Email:v('fTEmail'),Website:v('fTWebsite'),IsKonusu:v('fTIsKonusu'),Santiye:v('fTSantiye'),SozBas:v('fTSozBas'),SozBit:v('fTSozBit'),SozTutar:v('fTSozTutar'),Adres:v('fTAdres'),Notlar:v('fTNotlar')};
+  loading(true);
+  try {
+    if(editingId){await updateRow('Taseronlar',editingId,data);}
+    else{await writeRow('Taseronlar',data);}
+    cache.taseronlar=await readSheet('Taseronlar');
+    populateFilters();closeModal('modalTaseron');renderTaseronlar();
+  }catch(e){alert('Hata: '+e.message);}
+  loading(false);
+}
+
+async function delTaseron(id) {
+  if(!confirm('Bu firmayı silmek istediğinize emin misiniz?'))return;
+  loading(true);
+  try{await deleteRow('Taseronlar',id);cache.taseronlar=await readSheet('Taseronlar');populateFilters();renderTaseronlar();}
+  catch(e){alert('Hata: '+e.message);}
+  loading(false);
+}
+
+// ============================================================
+// YETKİLİLER
+// ============================================================
+function renderYetkililer() {
+  const q=(v('srchYetkili')||'').toLowerCase();
+  const f=v('filtYetkiliFirma');
+  const list=cache.yetkililer.filter(y=>(!q||(y.AdSoyad||'').toLowerCase().includes(q)||(y.Telefon||'').includes(q))&&(!f||String(y.TaseronId)===f));
+  document.getElementById('yetkiliTable').innerHTML=list.length?list.map(y=>`<tr>
+    <td><strong>${y.AdSoyad}</strong></td><td>${getTaseron(y.TaseronId).Unvan}</td><td>${y.Unvan||'—'}</td>
+    <td><span class="badge normal">${y.YetkiTuru||'—'}</span></td><td>${y.Telefon||'—'}</td><td>${y.Email||'—'}</td>
+    <td><span class="badge ${(y.Durum||'').toLowerCase()}">${y.Durum||'—'}</span></td>
+    <td class="admin-only"><div class="btn-group"><button class="btn sm" onclick="openYetkili('${y.ID}')">✏️</button><button class="btn sm" onclick="delYetkili('${y.ID}')">🗑️</button></div></td>
+  </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;padding:20px;color:#888">Kayıt bulunamadı</td></tr>';
+}
+
+function openYetkili(id) {
+  editingId=id||null;
+  const y=id?cache.yetkililer.find(x=>String(x.ID)===String(id)):{};
+  document.getElementById('mYetkiliTitle').textContent=id?'Yetkili Düzenle':'Yeni Yetkili';
+  const map={fYFirma:'TaseronId',fYAdSoyad:'AdSoyad',fYUnvan:'Unvan',fYYetkiTuru:'YetkiTuru',fYTelefon:'Telefon',fYTelefon2:'Telefon2',fYEmail:'Email',fYDurum:'Durum',fYNotlar:'Notlar'};
+  Object.entries(map).forEach(([fid,key])=>{const el=document.getElementById(fid);if(el)el.value=y[key]||'';});
+  document.getElementById('modalYetkili').classList.add('open');
+}
+
+async function saveYetkili() {
+  const ad=v('fYAdSoyad').trim();if(!ad){alert('Ad Soyad zorunludur.');return;}
+  const tId=v('fYFirma');
+  const data={TaseronId:tId,TaseronAdi:getTaseron(tId).Unvan,AdSoyad:ad,Unvan:v('fYUnvan'),YetkiTuru:v('fYYetkiTuru'),Telefon:v('fYTelefon'),Telefon2:v('fYTelefon2'),Email:v('fYEmail'),Durum:v('fYDurum'),Notlar:v('fYNotlar')};
+  loading(true);
+  try{if(editingId)await updateRow('Yetkililer',editingId,data);else await writeRow('Yetkililer',data);cache.yetkililer=await readSheet('Yetkililer');closeModal('modalYetkili');renderYetkililer();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+async function delYetkili(id) {
+  if(!confirm('Yetkiliyi silmek istediğinize emin misiniz?'))return;
+  loading(true);
+  try{await deleteRow('Yetkililer',id);cache.yetkililer=await readSheet('Yetkililer');renderYetkililer();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+// ============================================================
+// PERSONELLER
+// ============================================================
+function renderPersoneller() {
+  const q=(v('srchPersonel')||'').toLowerCase();
+  const f=v('filtPersonelFirma');
+  const d=v('filtPersonelDurum');
+  const list=cache.personeller.filter(p=>(!q||((p.Adi||'')+' '+(p.Soyadi||'')).toLowerCase().includes(q)||(p.TC||'').includes(q)||(p.Gorev||'').toLowerCase().includes(q))&&(!f||String(p.TaseronId)===f)&&(!d||p.Durum===d));
+  document.getElementById('personelTable').innerHTML=list.length?list.map(p=>`<tr>
+    <td><strong>${p.Adi} ${p.Soyadi}</strong></td>
+    <td style="font-family:monospace;font-size:12px">${p.TC||'—'}</td>
+    <td>${getTaseron(p.TaseronId).Unvan}</td>
+    <td>${p.Gorev||'—'}</td><td>${fmtDate(p.GirisTarihi)}</td><td>${p.Cinsiyet||'—'}</td>
+    <td>${isTruthy(p.Emekli)?'<span class="badge warning">Emekli</span>':'—'}</td>
+    <td><span class="badge ${(p.Durum||'').toLowerCase()}">${p.Durum||'—'}</span></td>
+    <td><div class="btn-group"><span class="admin-only"><button class="btn sm" onclick="openPersonel('${p.ID}')">✏️</button></span><button class="btn sm" onclick="openBelge(null,'${p.ID}')">📋 Belge</button><span class="admin-only"><button class="btn sm" onclick="delPersonel('${p.ID}')">🗑️</button></span></div></td>
+  </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">Kayıt bulunamadı</td></tr>';
+}
+
+function openPersonel(id) {
+  editingId=id||null;
+  const p=id?cache.personeller.find(x=>String(x.ID)===String(id)):{};
+  document.getElementById('mPersonelTitle').textContent=id?'Personel Düzenle':'Yeni Personel';
+  const map={fPTC:'TC',fPAdi:'Adi',fPSoyadi:'Soyadi',fPCinsiyet:'Cinsiyet',fPDogum:'DogumTarihi',fPTelefon:'Telefon',fPAdres:'Adres',fPFirma:'TaseronId',fPGorev:'Gorev',fPOgrenim:'OgrenimDurumu',fPMaas:'Maas',fPGiris:'GirisTarihi',fPCikis:'CikisTarihi',fPDurum:'Durum',fPNotlar:'Notlar'};
+  Object.entries(map).forEach(([fid,key])=>{const el=document.getElementById(fid);if(el)el.value=p[key]||'';});
+  document.getElementById('fPEmekli').value=isTruthy(p.Emekli)?'TRUE':'FALSE';
+  resetTabs('tabPK',['tabPK','tabPI','tabPD']);
+  document.getElementById('modalPersonel').classList.add('open');
+}
+
+async function savePersonel() {
+  const adi=v('fPAdi').trim(),soyadi=v('fPSoyadi').trim();
+  if(!adi||!soyadi){alert('Ad ve Soyad zorunludur.');return;}
+  const tId=v('fPFirma');
+  const data={TaseronId:tId,TaseronAdi:getTaseron(tId).Unvan,TC:v('fPTC'),Adi:adi,Soyadi:soyadi,Cinsiyet:v('fPCinsiyet'),DogumTarihi:v('fPDogum'),Telefon:v('fPTelefon'),Adres:v('fPAdres'),Gorev:v('fPGorev'),OgrenimDurumu:v('fPOgrenim'),Maas:v('fPMaas'),GirisTarihi:v('fPGiris'),CikisTarihi:v('fPCikis'),Emekli:v('fPEmekli'),Durum:v('fPDurum'),Notlar:v('fPNotlar')};
+  loading(true);
+  try{if(editingId)await updateRow('Personeller',editingId,data);else await writeRow('Personeller',data);cache.personeller=await readSheet('Personeller');populateFilters();closeModal('modalPersonel');renderPersoneller();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+async function delPersonel(id) {
+  if(!confirm('Personeli silmek istediğinize emin misiniz?'))return;
+  loading(true);
+  try{await deleteRow('Personeller',id);cache.personeller=await readSheet('Personeller');populateFilters();renderPersoneller();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+// ============================================================
+// BELGELER
+// ============================================================
+function renderBelgeler() {
+  const q=(v('srchBelge')||'').toLowerCase();
+  const f=v('filtBelgeFirma'),bt=v('filtBelgeTuru'),vf=v('filtBelgeDurum');
+  const today=new Date(),soon=new Date(today.getTime()+30*86400000);
+  const list=cache.belgeler.filter(b=>{
+    const p=cache.personeller.find(x=>String(x.ID)===String(b.PersonelId));
+    if(!p)return false;
+    if(q&&!((p.Adi+' '+p.Soyadi).toLowerCase().includes(q))&&!(b.BelgeTuruAdi||'').toLowerCase().includes(q))return false;
+    if(f&&String(p.TaseronId)!==f)return false;
+    if(bt&&String(b.BelgeTuruId)!==bt)return false;
+    if(vf){
+      const d=daysLeft(b.GecerlilikTarihi);
+      if(vf==='var'&&!isTruthy(b.VarMi))return false;
+      if(vf==='yok'&&isTruthy(b.VarMi))return false;
+      if(vf==='yaklasan'&&!(isTruthy(b.VarMi)&&d!==null&&d>=0&&d<=30))return false;
+      if(vf==='gecmis'&&!(isTruthy(b.VarMi)&&d!==null&&d<0))return false;
+    }
+    return true;
+  });
+  document.getElementById('belgeTable').innerHTML=list.length?list.map(b=>{
+    const p=cache.personeller.find(x=>String(x.ID)===String(b.PersonelId));
+    const days=daysLeft(b.GecerlilikTarihi);
+    const bt2=cache.belgeTurleri.find(x=>String(x.ID)===String(b.BelgeTuruId));
+    return `<tr>
+      <td><strong>${p?p.Adi+' '+p.Soyadi:'—'}</strong></td>
+      <td>${p?getTaseron(p.TaseronId).Unvan:'—'}</td>
+      <td>${b.BelgeTuruAdi||'—'} ${bt2&&isTruthy(bt2.Zorunlu)?'<span class="badge zorunlu" style="font-size:9px">Z</span>':''}</td>
+      <td style="font-size:12px">${b.BelgeNo||'—'}</td>
+      <td>${fmtDate(b.VerisTarihi)}</td>
+      <td class="${expiryClass(days)}">${b.GecerlilikTarihi?fmtDate(b.GecerlilikTarihi):'—'}</td>
+      <td>${b.VerenKurum||'—'}</td>
+      <td><span class="badge ${isTruthy(b.VarMi)?'var':'yok'}">${isTruthy(b.VarMi)?'VAR':'YOK'}</span>${days!==null&&days<0&&isTruthy(b.VarMi)?' <span class="badge pasif">Geçmiş</span>':''}${days!==null&&days>=0&&days<=30&&isTruthy(b.VarMi)?' <span class="badge warning">Yaklaşıyor</span>':''}</td>
+      <td class="admin-only"><div class="btn-group"><button class="btn sm" onclick="openBelge('${b.ID}')">✏️</button><button class="btn sm" onclick="delBelge('${b.ID}')">🗑️</button></div></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">Kayıt bulunamadı</td></tr>';
+}
+
+function openBelge(id, personelId) {
+  editingId=id||null;
+  populateFilters();
+  const b=id?cache.belgeler.find(x=>String(x.ID)===String(id)):{};
+  document.getElementById('mBelgeTitle').textContent=id?'Belge Düzenle':'Yeni Belge';
+  document.getElementById('fBPersonel').value=b.PersonelId||personelId||'';
+  document.getElementById('fBTuru').value=b.BelgeTuruId||'';
+  document.getElementById('fBNo').value=b.BelgeNo||'';
+  document.getElementById('fBVerenKurum').value=b.VerenKurum||'';
+  document.getElementById('fBVerisTarihi').value=b.VerisTarihi||'';
+  document.getElementById('fBGecerlilik').value=b.GecerlilikTarihi||'';
+  document.getElementById('fBVarMi').value=isTruthy(b.VarMi)?'TRUE':'FALSE';
+  document.getElementById('fBNotlar').value=b.Notlar||'';
+  document.getElementById('modalBelge').classList.add('open');
+}
+
+async function saveBelge() {
+  const pId=v('fBPersonel'),btId=v('fBTuru');
+  const p=cache.personeller.find(x=>String(x.ID)===String(pId));
+  const bt2=cache.belgeTurleri.find(x=>String(x.ID)===String(btId));
+  const data={PersonelId:pId,PersonelAdi:p?p.Adi+' '+p.Soyadi:'',BelgeTuruId:btId,BelgeTuruAdi:bt2?bt2.Adi:'',BelgeNo:v('fBNo'),VerenKurum:v('fBVerenKurum'),VerisTarihi:v('fBVerisTarihi'),GecerlilikTarihi:v('fBGecerlilik'),VarMi:v('fBVarMi'),Notlar:v('fBNotlar')};
+  loading(true);
+  try{if(editingId)await updateRow('Belgeler',editingId,data);else await writeRow('Belgeler',data);cache.belgeler=await readSheet('Belgeler');closeModal('modalBelge');renderBelgeler();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+async function delBelge(id) {
+  if(!confirm('Belge kaydını silmek istediğinize emin misiniz?'))return;
+  loading(true);
+  try{await deleteRow('Belgeler',id);cache.belgeler=await readSheet('Belgeler');renderBelgeler();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+// ============================================================
+// DEKONTLAR
+// ============================================================
+const AYLAR=['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+function renderDekontlar() {
+  const q=(v('srchDekont')||'').toLowerCase();
+  const f=v('filtDekontFirma'),y=v('filtDekontYil');
+  const list=cache.dekontlar.filter(d=>(!q||(d.PersonelAdi||'').toLowerCase().includes(q)||(d.DekontNo||'').toLowerCase().includes(q))&&(!f||String(d.TaseronId)===f)&&(!y||String(d.Yil)===y));
+  document.getElementById('dekontTable').innerHTML=list.length?list.map(d=>`<tr>
+    <td><strong>${d.DekontNo||'—'}</strong></td>
+    <td>${d.PersonelAdi||'—'}</td><td>${d.TaseronAdi||getTaseron(d.TaseronId).Unvan}</td>
+    <td>${d.Yil} ${AYLAR[Number(d.Ay)]||''}</td>
+    <td><span class="badge normal">${d.OdemeTuru||'—'}</span></td>
+    <td><strong>${fmtMoney(d.Tutar)}</strong></td>
+    <td>${fmtDate(d.OdemeTarihi)}</td>
+    <td class="admin-only"><div class="btn-group"><button class="btn sm" onclick="openDekont('${d.ID}')">✏️</button><button class="btn sm" onclick="delDekont('${d.ID}')">🗑️</button></div></td>
+  </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;padding:20px;color:#888">Kayıt bulunamadı</td></tr>';
+}
+
+function openDekont(id) {
+  editingId=id||null;
+  populateFilters();
+  const d=id?cache.dekontlar.find(x=>String(x.ID)===String(id)):{};
+  document.getElementById('mDekontTitle').textContent=id?'Dekont Düzenle':'Yeni Dekont';
+  document.getElementById('fDFirma').value=d.TaseronId||'';
+  onDFirmaChange(d.PersonelId);
+  document.getElementById('fDYil').value=d.Yil||new Date().getFullYear();
+  document.getElementById('fDAy').value=d.Ay||(new Date().getMonth()+1);
+  document.getElementById('fDOdemeTuru').value=d.OdemeTuru||'Maaş';
+  document.getElementById('fDOdemeTarihi').value=d.OdemeTarihi||'';
+  document.getElementById('fDTutar').value=d.Tutar||'';
+  document.getElementById('fDNo').value=d.DekontNo||'';
+  document.getElementById('fDAciklama').value=d.Aciklama||'';
+  document.getElementById('modalDekont').classList.add('open');
+}
+
+function onDFirmaChange(preselect) {
+  const fid=v('fDFirma');
+  const ps=cache.personeller.filter(p=>String(p.TaseronId)===String(fid));
+  const sel=document.getElementById('fDPersonel');
+  sel.innerHTML=ps.map(p=>`<option value="${p.ID}">${p.Adi} ${p.Soyadi}</option>`).join('');
+  if(preselect) sel.value=preselect;
+}
+
+async function saveDekont() {
+  const tutar=parseFloat(v('fDTutar'));if(!tutar){alert('Tutar zorunludur.');return;}
+  const tId=v('fDFirma'),pId=v('fDPersonel');
+  const p=cache.personeller.find(x=>String(x.ID)===String(pId));
+  const data={TaseronId:tId,TaseronAdi:getTaseron(tId).Unvan,PersonelId:pId,PersonelAdi:p?p.Adi+' '+p.Soyadi:'',Yil:v('fDYil'),Ay:v('fDAy'),OdemeTuru:v('fDOdemeTuru'),OdemeTarihi:v('fDOdemeTarihi'),Tutar:tutar,DekontNo:v('fDNo'),Aciklama:v('fDAciklama')};
+  loading(true);
+  try{if(editingId)await updateRow('Dekontlar',editingId,data);else await writeRow('Dekontlar',data);cache.dekontlar=await readSheet('Dekontlar');populateFilters();closeModal('modalDekont');renderDekontlar();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+async function delDekont(id) {
+  if(!confirm('Dekontu silmek istediğinize emin misiniz?'))return;
+  loading(true);
+  try{await deleteRow('Dekontlar',id);cache.dekontlar=await readSheet('Dekontlar');renderDekontlar();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+// ============================================================
+// BELGE TÜRLERİ
+// ============================================================
+function renderBelgeTurleri() {
+  document.getElementById('belgeTuruTable').innerHTML=cache.belgeTurleri.map(b=>`<tr>
+    <td><strong>${b.Adi}</strong></td><td>${b.Aciklama||'—'}</td>
+    <td>${isTruthy(b.Zorunlu)?'<span class="badge zorunlu">Zorunlu</span>':'<span class="badge normal">İsteğe bağlı</span>'}</td>
+    <td>${isTruthy(b.Sureli)?'<span class="badge sureli">Süreli</span>':'—'}</td>
+    <td>${isTruthy(b.Aktif)?'<span class="badge aktif">Aktif</span>':'<span class="badge pasif">Pasif</span>'}</td>
+    <td class="admin-only"><div class="btn-group"><button class="btn sm" onclick="openBelgeTuru('${b.ID}')">✏️</button><button class="btn sm" onclick="delBelgeTuru('${b.ID}')">🗑️</button></div></td>
+  </tr>`).join('');
+}
+
+function openBelgeTuru(id) {
+  editingId=id||null;
+  const b=id?cache.belgeTurleri.find(x=>String(x.ID)===String(id)):{};
+  document.getElementById('mBTTitle').textContent=id?'Belge Türü Düzenle':'Yeni Belge Türü';
+  document.getElementById('fBTAdi').value=b.Adi||'';
+  document.getElementById('fBTAciklama').value=b.Aciklama||'';
+  document.getElementById('fBTZorunlu').value=isTruthy(b.Zorunlu)?'TRUE':'FALSE';
+  document.getElementById('fBTSureli').value=isTruthy(b.Sureli)?'TRUE':'FALSE';
+  document.getElementById('fBTAktif').value=isTruthy(b.Aktif)?'TRUE':'FALSE';
+  document.getElementById('modalBelgeTuru').classList.add('open');
+}
+
+async function saveBelgeTuru() {
+  const adi=v('fBTAdi').trim();if(!adi){alert('Belge adı zorunludur.');return;}
+  const data={Adi:adi,Aciklama:v('fBTAciklama'),Zorunlu:v('fBTZorunlu'),Sureli:v('fBTSureli'),Aktif:v('fBTAktif')};
+  loading(true);
+  try{if(editingId)await updateRow('BelgeTurleri',editingId,data);else await writeRow('BelgeTurleri',data);cache.belgeTurleri=await readSheet('BelgeTurleri');populateFilters();closeModal('modalBelgeTuru');renderBelgeTurleri();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+async function delBelgeTuru(id) {
+  if(!confirm('Belge türünü silmek istediğinize emin misiniz?'))return;
+  loading(true);
+  try{await deleteRow('BelgeTurleri',id);cache.belgeTurleri=await readSheet('BelgeTurleri');populateFilters();renderBelgeTurleri();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+// ============================================================
+// KULLANICILAR
+// ============================================================
+function renderKullanicilar() {
+  document.getElementById('kullaniciTable').innerHTML=cache.kullanicilar.map(u=>`<tr>
+    <td><strong>${u.KullaniciAdi}</strong></td><td>${u.AdSoyad}</td>
+    <td>${u.Rol==='admin'?'<span class="badge aktif">Admin</span>':'<span class="badge normal">Görüntüleyici</span>'}</td>
+    <td class="admin-only"><button class="btn sm" onclick="delKullanici('${u.ID}')">🗑️ Sil</button></td>
+  </tr>`).join('');
+}
+
+function openKullanici() {
+  ['fKAdi','fKAdSoyad','fKSifre'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fKRol').value='viewer';
+  document.getElementById('modalKullanici').classList.add('open');
+}
+
+async function saveKullanici() {
+  const adi=v('fKAdi').trim().toLowerCase(),ad=v('fKAdSoyad').trim(),sifre=v('fKSifre');
+  if(!adi||!ad||!sifre){alert('Tüm alanlar zorunludur.');return;}
+  if(sifre.length<6){alert('Şifre en az 6 karakter olmalıdır.');return;}
+  if(cache.kullanicilar.find(u=>u.KullaniciAdi===adi)){alert('Bu kullanıcı adı zaten mevcut.');return;}
+  const data={KullaniciAdi:adi,Sifre:sifre,AdSoyad:ad,Rol:v('fKRol')};
+  loading(true);
+  try{await writeRow('Kullanicilar',data);cache.kullanicilar=await readSheet('Kullanicilar');closeModal('modalKullanici');renderKullanicilar();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+async function delKullanici(id) {
+  if(!confirm('Kullanıcıyı silmek istediğinize emin misiniz?'))return;
+  loading(true);
+  try{await deleteRow('Kullanicilar',id);cache.kullanicilar=await readSheet('Kullanicilar');renderKullanicilar();}
+  catch(e){alert('Hata: '+e.message);}loading(false);
+}
+
+// ============================================================
+// YARDIMCI
+// ============================================================
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function overlayClose(e,id){if(e.target.id===id)closeModal(id);}
+
+function switchTab(el,tab) {
+  const modal=el.closest('.modal');
+  modal.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  modal.querySelectorAll('[id^="tab"]').forEach(t=>t.style.display='none');
+  const tgt=document.getElementById(tab);if(tgt)tgt.style.display='block';
+}
+
+function resetTabs(activeId,allIds) {
+  allIds.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const a=document.getElementById(activeId);if(a)a.style.display='block';
+}
+
+// Script URL yoksa setup kutusunu göster
+if (!SCRIPT_URL) document.getElementById('setupBox').style.display='block';
+document.getElementById('loginUser').focus();
+</script>
+</body>
+</html>
