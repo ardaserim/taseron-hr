@@ -561,17 +561,27 @@ let editingId = null;
 function apiCall(params) {
   return new Promise((resolve, reject) => {
     if (!SCRIPT_URL) { reject(new Error('Script URL ayarlanmamış')); return; }
-    const cbName = 'cb_' + Date.now();
+    const cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*99999);
     const url = SCRIPT_URL + '?' + Object.entries({...params, callback: cbName})
       .map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
     const script = document.createElement('script');
-    window[cbName] = (data) => {
+    const timer = setTimeout(() => {
       delete window[cbName];
-      document.body.removeChild(script);
-      if (data.error) reject(new Error(data.error));
+      if (document.body.contains(script)) document.body.removeChild(script);
+      reject(new Error('Zaman aşımı — lütfen tekrar deneyin'));
+    }, 15000);
+    window[cbName] = (data) => {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (document.body.contains(script)) document.body.removeChild(script);
+      if (data && data.error) reject(new Error(data.error));
       else resolve(data);
     };
-    script.onerror = () => reject(new Error('Bağlantı hatası'));
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[cbName];
+      reject(new Error('Bağlantı hatası'));
+    };
     script.src = url;
     document.body.appendChild(script);
   });
